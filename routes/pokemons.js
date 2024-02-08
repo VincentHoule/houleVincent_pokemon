@@ -18,5 +18,15 @@ router.get('/:id', (req, res) => {
 router.post('/', (req, res) => {
     
     pokemonsController.ajouterUnPokemon(req, res);
+});
+
+router.put('/:id', (req, res) => {
+    
+    pokemonsController.modifierUnPokemon(req, res);
+});
+
+router.delete('/:id', (req, res) => {
+    
+    pokemonsController.supprimerUnPokemon(req, res);
 })
 module.exports = router;

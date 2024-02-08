@@ -37,10 +37,18 @@ exports.trouverUnPokemon = (req, res) => {
 
 exports.trouverUnType = (req, res) => {
     // Teste si le paramètre id est présent et valide
-    if (!req.query.type || parseInt(req.query.type) == "") {
+    if (!req.query.type || req.query.type == "") {
         res.status(400);
         res.send({
             message: "Le type ne doit pas être vide"
+        });
+        return;
+    }
+
+    if (!req.query.page || parseInt(req.query.page) <= 0) {
+        res.status(400);
+        res.send({
+            message: "La page ne doit pas être vide ou égale à 0 et moins"
         });
         return;
     }
@@ -62,7 +70,7 @@ exports.trouverUnType = (req, res) => {
                 Pokemons: Pokemons.slice(req.query.page * 25 - 25, req.query.page * 25),
                 type: req.query.type,
                 Nombre_de_Pokemons: Pokemons.length,
-                page: req.query.page,
+                page: parseInt(req.query.page),
                 Nombre_de_pages: Math.ceil(Pokemons.length / 25)
             });
 
@@ -80,42 +88,42 @@ exports.trouverUnType = (req, res) => {
 exports.ajouterUnPokemon = (req, res) => {
 
     var message = "";
+
     if (!req.body.nom || (req.body.nom.length <= 0 && req.body.nom.length > 100)) {
-        message += "Le nom est vide ou manquant ";
+        message += "Le nom est vide, manquant ou invalide. ";
     }
     if (!req.body.type_primaire || (req.body.type_primaire.length <= 0 && req.body.type_primaire.length > 100)) {
-        message += "Le type primaire est vide ou manquant ";
+        message += "Le type primaire est vide, manquant ou invalide. ";
     }
-    if (!req.body.pv || parseInt(req.body.pv) < 0) {
-        message += "Les pv est vide ou invalide ";
-    }
-    if (!req.body.attaque || parseInt(req.body.attaque) < 0) {
-        message += "L'attaque est vide ou invalide ";
-    }
-    if (!req.body.defense || parseInt(req.body.defense) < 0) {
-        message += "La defense est vide ou invalide ";
+    if (!req.body.type_secondaire || req.body.type_secondaire.length < 0 && req.body.type_secondaire.length > 100) {
+        message += "Le type secondaire est manquant ou invalide. ";
     }
 
-    if (req.body.type_secondaire) {
-        if (req.body.type_secondaire.length <= 0 && req.body.type_secondaire.length > 100) {
-            message += "Le type secondaire est vide ou manquant ";
-        }
+    if (!req.body.pv || parseInt(req.body.pv) < 0) {
+        message += "Les pv est vide ou invalide. ";
     }
-    else {
-        type_secondaire = "";
+    if (!req.body.attaque || parseInt(req.body.attaque) < 0) {
+        message += "L'attaque est vide ou invalide. ";
     }
+    if (!req.body.defense || parseInt(req.body.defense) < 0) {
+        message += "La defense est vide ou invalide. ";
+    }
+
+
     if (message != "") {
         res.status(404);
         res.send({ message: `${message}` });
         return;
     }
 
-    Pokemons.ajouterUnPokemon(req.body.nom, req.body.type_primaire, type_secondaire,
+    Pokemons.ajouterUnPokemon(req.body.nom, req.body.type_primaire, req.body.type_secondaire,
         req.body.pv, req.body.attaque, req.body.defense)
         .then(() => {
-            // S'il n'y a aucun résultat, on retourne un message d'erreur avec le code 404
 
-            res.send(req.body);
+            res.send({
+                Info: "Le pokemon a été ajouté avec succès",
+                Pokemon: req.body
+            });
         })
         .catch((erreur) => {
             console.log('Erreur : ', erreur);
@@ -128,3 +136,86 @@ exports.ajouterUnPokemon = (req, res) => {
 
 };
 
+exports.modifierUnPokemon = (req, res) => {
+
+    var message = ""; // Message d'erreur
+
+    // Protection contre les paramêtres invalides
+    if (!req.params.id || parseInt(req.params.id) <= 0) {
+        message += "L'id est invalide ou absent. "
+    }
+    if (!req.body.nom || (req.body.nom.length <= 0 && req.body.nom.length > 100)) {
+        message += "Le nom est vide, manquant ou invalide. ";
+    }
+    if (!req.body.type_primaire || (req.body.type_primaire.length <= 0 && req.body.type_primaire.length > 100)) {
+        message += "Le type primaire est vide, manquant ou invalide. ";
+    }
+    if (!req.body.type_secondaire || req.body.type_secondaire.length < 0 && req.body.type_secondaire.length > 100) {
+        message += "Le type secondaire est manquant ou invalide. ";
+    }
+
+    if (!req.body.pv || parseInt(req.body.pv) < 0) {
+        message += "Les pv est vide ou invalide. ";
+    }
+    if (!req.body.attaque || parseInt(req.body.attaque) < 0) {
+        message += "L'attaque est vide ou invalide. ";
+    }
+    if (!req.body.defense || parseInt(req.body.defense) < 0) {
+        message += "La defense est vide ou invalide. ";
+    }
+
+
+    // Envoie du message d'erreur
+    if (message != "") {
+        res.status(404);
+        res.send({ message: `${message}` });
+        return;
+    }
+
+    Pokemons.modifierUnPokemon(req.body.nom, req.body.type_primaire, req.body.type_secondaire,
+        req.body.pv, req.body.attaque, req.body.defense, req.params.id)
+        .then(() => {
+            // Envoie du succès de la requete
+            res.send({
+                Message: "Le pokemon id " + req.params.id + " a été modifié avec succès",
+                Pokemons: req.body
+            });
+        })
+        .catch((erreur) => {
+            // Envoie de l'échec de la requete
+            console.log('Erreur : ', erreur);
+            res.status(500);
+            res.send({
+                message: "Erreur lors de l'insertion"
+            });
+        });
+};
+
+exports.supprimerUnPokemon = (req, res) => {
+
+    if (!req.params.id || parseInt(req.params.id) <= 0) {
+        res.status(400);
+        res.send({
+            message: "L'id du pokemon est obligatoire et doit être supérieur à 0"
+        });
+        return;
+    }
+    info = Pokemons.trouverUnPokemon(req.params.id);
+    Pokemons.supprimerUnPokemon(req.params.id)
+        .then(() => {
+
+            res.send({
+                Message: "Le pokemon id " + req.params.id + " a été supprimé avec succès",
+                Pokemon: info
+
+            });
+        })
+        .catch((erreur) => {
+            console.log('Erreur : ', erreur);
+            res.status(500);
+            res.send({
+                message: "Erreur lors de la suppression"
+            });
+        });
+
+}

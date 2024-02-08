@@ -14,7 +14,7 @@ const Pokemons = (pokemons) => {
 Pokemons.trouverUnPokemon = (id) => {
     return new Promise((resolve, reject) => {
 
-        const requete = `SELECT nom, type_primaire, type_secondaire, pv, attaque, defense FROM pokemon WHERE id = ?;`;
+        const requete = `SELECT id, nom, type_primaire, type_secondaire, pv, attaque, defense FROM pokemon WHERE id = ?;`;
         const params = [id]
 
         sql.query(requete, params, (erreur, resultat) => {
@@ -31,7 +31,7 @@ Pokemons.trouverUnPokemon = (id) => {
 Pokemons.trouverUnType = (type) => {
     return new Promise((resolve, reject) => {
 
-        const requete = `SELECT nom, type_primaire, type_secondaire, pv, attaque, defense 
+        const requete = `SELECT id, nom, type_primaire, type_secondaire, pv, attaque, defense 
         FROM pokemon WHERE type_primaire = ? OR type_secondaire = ?;`;
         const params = [type, type];
 
@@ -54,6 +54,42 @@ Pokemons.ajouterUnPokemon = (nom, type_primaire, type_secondaire, pv, attaque, d
         VALUES (?, ?, ?, ?, ?, ?); `;
         const params = [nom, type_primaire, type_secondaire, pv, attaque, defense]
 
+        sql.query(requete, params, (erreur, resultat) => {
+            if (erreur) {
+                // S'il y a une erreur, je la retourne avec reject()
+                reject(erreur);
+            }
+            // Sinon je retourne le résultat sans faire de validation, c'est possible que le résultat soit vide
+            resolve(resultat);
+        })
+    });
+
+}
+
+Pokemons.modifierUnPokemon = (nom, type_primaire, type_secondaire, pv, attaque, defense, id) => {
+    return new Promise((resolve, reject) => {
+
+        const requete = `UPDATE pokemon SET nom = ?, type_primaire = ?, type_secondaire = ?, 
+         pv = ?, attaque = ?, defense = ? WHERE id = ?;`;
+        const params = [nom, type_primaire, type_secondaire, pv, attaque, defense, parseInt(id)];
+
+        sql.query(requete, params, (erreur, resultat) => {
+            if (erreur) {
+                // S'il y a une erreur, je la retourne avec reject()
+                reject(erreur);
+            }
+            // Sinon je retourne le résultat sans faire de validation, c'est possible que le résultat soit vide
+            resolve(resultat);
+        })
+    });
+};
+
+Pokemons.supprimerUnPokemon = (id) => {
+    return new Promise((resolve, reject) => {
+
+        const requete = `DELETE FROM pokemon WHERE id = ?;`;
+        const params = [id];
+        
         sql.query(requete, params, (erreur, resultat) => {
             if (erreur) {
                 // S'il y a une erreur, je la retourne avec reject()
